@@ -33,33 +33,29 @@ class MyWebServer(SocketServer.BaseRequestHandler):
 
     Output_msgs = {200: "HTTP/1.1 200 OK \r\n", 404: "HTTP/1.1 404 Not Found \r\n", 
                    405: "HTTP/1.1 405 Method Not Allowed \r\n"} 
-    #item_path = ""
 
     def handle(self):
-        self.data = self.request.recv(1024).strip()
-        # first item in request is type of request, check for 'GET'
-        # the path of the item is the second thing written
-        split_data = self.data.split(" ")
-        if split_data[0] != "GET":
+        ''' first item in request is type of request, check for 'GET'
+            The path of the item is the second data item written
+            Check if in the servable location and send to print correct code
+        '''
+        self.data = self.request.recv(1024).strip().split(" ")
+        if self.data[0] != "GET":
             send_back(405)
 
-        self.item_path = split_data[1]
-        # if not in the /www folder we don't want to serve it
-        needed = os.path.abspath("./www")
-        need_len = len(needed)
+        self.item_path = self.data[1]
+        needed = os.path.abspath("./www") # if not in the /www folder we don't want to serve it
         if self.item_path[-1] == "/":
             self.item_path += "index.html"
         self.item_path = "./www" + self.item_path
         
         try:
-            if needed[0:need_len] != os.path.abspath(self.item_path)[0:need_len]:
+            if needed[0:] != os.path.abspath(self.item_path)[0:len(needed)]:
                 self.send_back(404)
             else: 
                 self.send_back(200)
         except IOError:
             self.send_back(404)
-        
-        #print ("Got a request of: %s\n" % self.data)
 
     def send_back(self, code):
         if code == 200:
@@ -70,7 +66,6 @@ class MyWebServer(SocketServer.BaseRequestHandler):
         else:
             to_send = self.Output_msgs[code]
         self.request.sendall(to_send)
-
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 8080
