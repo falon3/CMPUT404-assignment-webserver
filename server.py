@@ -1,7 +1,9 @@
 #  coding: utf-8 
 import SocketServer
+import os
+import mimetypes
 
-# Copyright 2013 Abram Hindle, Eddie Antonio Santos
+# Copyright 2016 Abram Hindle, Eddie Antonio Santos, Falon Scheers
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,11 +30,47 @@ import SocketServer
 
 
 class MyWebServer(SocketServer.BaseRequestHandler):
-    
+
+    Output_msgs = {200: "HTTP/1.1 200 OK \r\n", 404: "HTTP/1.1 404 Not Found \r\n", 
+                   405: "HTTP/1.1 405 Method Not Allowed \r\n"} 
+    #item_path = ""
+
     def handle(self):
         self.data = self.request.recv(1024).strip()
-        print ("Got a request of: %s\n" % self.data)
-        self.request.sendall("OK")
+        # first item in request is type of request, check for 'GET'
+        # the path of the item is the second thing written
+        split_data = self.data.split(" ")
+        if split_data[0] != "GET":
+            send_back(405)
+
+        self.item_path = split_data[1]
+        # if not in the /www folder we don't want to serve it
+        needed = os.path.abspath("./www")
+        need_len = len(needed)
+        if self.item_path[-1] == "/":
+            self.item_path += "index.html"
+        self.item_path = "./www" + self.item_path
+        
+        try:
+            if needed[0:need_len] != os.path.abspath(self.item_path)[0:need_len]:
+                self.send_back(404)
+            else: 
+                self.send_back(200)
+        except IOError:
+            self.send_back(404)
+        
+        #print ("Got a request of: %s\n" % self.data)
+
+    def send_back(self, code):
+        if code == 200:
+            content = open(os.path.abspath(self.item_path), 'r').read()
+            mime_type = "Content-Type: " + mimetypes.guess_type(self.item_path)[0] + "\r\n"
+            content_length = "Content-Length: " + str(len(content)) + "\r\n"
+            to_send = self.Output_msgs[code] + mime_type + content_length + "\n" + content
+        else:
+            to_send = self.Output_msgs[code]
+        self.request.sendall(to_send)
+
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 8080
