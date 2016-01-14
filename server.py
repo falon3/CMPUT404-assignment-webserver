@@ -31,24 +31,30 @@ import mimetypes
 
 class MyWebServer(SocketServer.BaseRequestHandler):
 
-    Output_msgs = {200: "HTTP/1.1 200 OK \r\n", 404: "HTTP/1.1 404 Not Found \r\n", 
-                   405: "HTTP/1.1 405 Method Not Allowed \r\n"} 
+    Output_msgs = {200: "HTTP/1.1 200 OK \n", 
+                   404: "HTTP/1.1 404 Not Found \n\n Page not found! or not? Who knows really...", 
+                   405: "HTTP/1.1 405 Method Not Allowed \n", 
+                   400: "HTTP/1.1 400 Bad Request \n BAD REQUEST!! Try something better!"} 
 
     def handle(self):
         ''' first item in request is type of request, check for 'GET'
             The path of the item is the second data item written
             Check if in the servable location and send to print correct code
         '''
+        # setup, parse and check for bad requests
         self.data = self.request.recv(1024).strip().split(" ")
         if self.data[0] != "GET":
-            send_back(405)
+            self.send_back(405)
+        if len(self.data) > 1:
+            self.item_path = self.data[1]
+        else:
+            self.send_back(400)
 
-        self.item_path = self.data[1]
-        needed = os.path.abspath("./www") # if not in the /www folder we don't want to serve it
-        if self.item_path[-1] == "/":
-            self.item_path += "index.html"
+        # if not in the /www folder we don't want to serve it
+        needed = os.path.abspath("./www") 
         self.item_path = "./www" + self.item_path
-        
+        if self.item_path[-1] == "/" or os.path.isdir(self.item_path):
+            self.item_path += "/index.html"
         try:
             if needed[0:] != os.path.abspath(self.item_path)[0:len(needed)]:
                 self.send_back(404)
@@ -57,15 +63,19 @@ class MyWebServer(SocketServer.BaseRequestHandler):
         except IOError:
             self.send_back(404)
 
+    # fetch content from valid pages or print error codes and message
     def send_back(self, code):
         if code == 200:
-            content = open(os.path.abspath(self.item_path), 'r').read()
-            mime_type = "Content-Type: " + mimetypes.guess_type(self.item_path)[0] + "\r\n"
-            content_length = "Content-Length: " + str(len(content)) + "\r\n"
+            file = open(os.path.abspath(self.item_path), 'r')
+            content = file.read()
+            mime_type = "Content-Type: " + mimetypes.guess_type(self.item_path)[0] + "\n"
+            content_length = "Content-Length: " + str(len(content)) + "\n"
             to_send = self.Output_msgs[code] + mime_type + content_length + "\n" + content
+            file.close()
         else:
             to_send = self.Output_msgs[code]
         self.request.sendall(to_send)
+        return
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 8080
