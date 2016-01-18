@@ -31,10 +31,10 @@ import mimetypes
 
 class MyWebServer(SocketServer.BaseRequestHandler):
 
-    Output_msgs = {200: "HTTP/1.1 200 OK \n", 
+    Output_msgs = {200: "HTTP/1.1 200 OK \r\n", 
                    404: "HTTP/1.1 404 Not Found \n\n Page not found! or not? Who knows really...", 
-                   405: "HTTP/1.1 405 Method Not Allowed \n", 
-                   400: "HTTP/1.1 400 Bad Request \n BAD REQUEST!! Try something better!"} 
+                   405: "HTTP/1.1 405 Method Not Allowed \r\n", 
+                   400: "HTTP/1.1 400 Bad Request \r\n BAD REQUEST!! Try something better!"} 
 
     def handle(self):
         ''' first item in request is type of request, check for 'GET'
@@ -68,8 +68,8 @@ class MyWebServer(SocketServer.BaseRequestHandler):
         if code == 200:
             file = open(os.path.abspath(self.item_path), 'r')
             content = file.read()
-            mime_type = "Content-Type: " + mimetypes.guess_type(self.item_path)[0] + "\n"
-            content_length = "Content-Length: " + str(len(content)) + "\n"
+            mime_type = "Content-Type: " + mimetypes.guess_type(self.item_path)[0] + "\r\n"
+            content_length = "Content-Length: " + str(len(content)) + "\r\n"
             to_send = self.Output_msgs[code] + mime_type + content_length + "\n" + content
             file.close()
         else:
