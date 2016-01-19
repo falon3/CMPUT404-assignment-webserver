@@ -31,10 +31,11 @@ import mimetypes
 
 class MyWebServer(SocketServer.BaseRequestHandler):
 
-    Output_msgs = {200: "HTTP/1.1 200 OK \r\n", 
-                   404: "HTTP/1.1 404 Not Found \n\n Page not found! or not? Who knows really...", 
-                   405: "HTTP/1.1 405 Method Not Allowed \r\n", 
-                   400: "HTTP/1.1 400 Bad Request \r\n BAD REQUEST!! Try something better!"} 
+    Output_msgs = {200: "HTTP/1.1 200 OK\r\n", 
+                   404: "HTTP/1.1 404 NOT FOUND\r\n Page not found! or not? Who knows really...", 
+                   405: "HTTP/1.1 405 METHOD NOT ALLOWED\r\n", 
+                   400: "HTTP/1.1 400 BAD REQUEST\r\n BAD REQUEST!! Try something better!",
+                   302: "HTTP/1.1 302 FOUND\r\n" } 
 
     def handle(self):
         ''' first item in request is type of request, check for 'GET'
@@ -45,36 +46,49 @@ class MyWebServer(SocketServer.BaseRequestHandler):
         self.data = self.request.recv(1024).strip().split(" ")
         if self.data[0] != "GET":
             self.send_back(405)
+            return
         if len(self.data) > 1:
+            print(self.data, "SELFDATA")
             self.item_path = self.data[1]
         else:
             self.send_back(400)
+            return
 
         # if not in the /www folder we don't want to serve it
         needed = os.path.abspath("./www") 
-        self.item_path = "./www" + self.item_path
-        if self.item_path[-1] == "/" or os.path.isdir(self.item_path):
-            self.item_path += "/index.html"
+        self.item_dir = "./www" + self.item_path
+        if os.path.isdir(self.item_dir):
+            if self.item_dir[-1] == "/":
+                self.item_dir += "index.html"
+            else:
+                self.send_back(302)
+                return
         try:
-            if needed[0:] != os.path.abspath(self.item_path)[0:len(needed)]:
+            if needed!= os.path.abspath(self.item_dir)[:len(needed)]:
                 self.send_back(404)
             else: 
                 self.send_back(200)
         except IOError:
             self.send_back(404)
+           
 
     # fetch content from valid pages or print error codes and message
     def send_back(self, code):
+        print(code, self.item_path, self.item_dir)
         if code == 200:
-            file = open(os.path.abspath(self.item_path), 'r')
+            file = open(os.path.abspath(self.item_dir), 'r')
             content = file.read()
-            mime_type = "Content-Type: " + mimetypes.guess_type(self.item_path)[0] + "\r\n"
+            mime_type = "Content-Type: " + mimetypes.guess_type(self.item_dir)[0] + "\r\n"
             content_length = "Content-Length: " + str(len(content)) + "\r\n"
-            to_send = self.Output_msgs[code] + mime_type + content_length + "\n" + content
+            to_send = self.Output_msgs[code] + mime_type \
+                      + content_length + content
             file.close()
+        elif code == 302:
+            new_loc = "Location: " + self.item_path + "/"
+            to_send = self.Output_msgs[code] + new_loc + "\r\n"
         else:
             to_send = self.Output_msgs[code]
-        self.request.sendall(to_send)
+        self.request.send(to_send)
         return
 
 if __name__ == "__main__":
