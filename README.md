@@ -24,6 +24,9 @@ Software Foundation; All Rights Reserved under the PSF license (GPL
 compatible) http://docs.python.org/2/library/socketserver.html
 
 Additional resources used:
+* Collaborated with Kyle Hayward, although code written is my own, we discussed it.
 * http://stackoverflow.com/questions/14412211/get-mimetype-of-file-python
 * https://docs.python.org/3/library/os.html
 * https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol#Example_session
+* http://edoceo.com/cli/curl
+* https://en.wikipedia.org/wiki/HTTP_301
