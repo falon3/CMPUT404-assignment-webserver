@@ -74,7 +74,6 @@ class MyWebServer(SocketServer.BaseRequestHandler):
 
     # fetch content from valid pages or print error codes and message
     def send_back(self, code):
-        print(code, self.item_path, self.item_dir)
         if code == 200:
             file = open(os.path.abspath(self.item_dir), 'r')
             content = file.read()
@@ -88,7 +87,7 @@ class MyWebServer(SocketServer.BaseRequestHandler):
             to_send = self.Output_msgs[code] + new_loc + "\r\n"
         else:
             to_send = self.Output_msgs[code]
-        self.request.send(to_send)
+        self.request.sendall(to_send)
         return
 
 if __name__ == "__main__":
