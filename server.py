@@ -48,7 +48,6 @@ class MyWebServer(SocketServer.BaseRequestHandler):
             self.send_back(405)
             return
         if len(self.data) > 1:
-            print(self.data, "SELFDATA")
             self.item_path = self.data[1]
         else:
             self.send_back(400)
@@ -78,9 +77,9 @@ class MyWebServer(SocketServer.BaseRequestHandler):
             file = open(os.path.abspath(self.item_dir), 'r')
             content = file.read()
             mime_type = "Content-Type: " + mimetypes.guess_type(self.item_dir)[0] + "\r\n"
-            content_length = "Content-Length: " + str(len(content)) + "\r\n"
+            content_length = "Content-Length: " + str(len(content)) + "\r\n\n"
             to_send = self.Output_msgs[code] + mime_type \
-                      + content_length + content
+                      + content_length + content + "\r\n"
             file.close()
         elif code == 302:
             new_loc = "Location: " + self.item_path + "/"
