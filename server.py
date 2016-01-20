@@ -32,7 +32,7 @@ import mimetypes
 class MyWebServer(SocketServer.BaseRequestHandler):
 
     Output_msgs = {200: "HTTP/1.1 200 OK\r\n", 
-                   404: "HTTP/1.1 404 NOT FOUND\r\n Page not found! or not? Who knows really...", 
+                   404: "HTTP/1.1 404 NOT FOUND\r\n\n Page not found! or not? Who knows really...", 
                    405: "HTTP/1.1 405 METHOD NOT ALLOWED\r\n", 
                    400: "HTTP/1.1 400 BAD REQUEST\r\n BAD REQUEST!! Try something better!",
                    302: "HTTP/1.1 302 FOUND\r\n" } 
@@ -84,6 +84,7 @@ class MyWebServer(SocketServer.BaseRequestHandler):
         elif code == 302:
             new_loc = "Location: " + self.item_path + "/"
             to_send = self.Output_msgs[code] + new_loc + "\r\n"
+            print(to_send)
         else:
             to_send = self.Output_msgs[code]
         self.request.sendall(to_send)
